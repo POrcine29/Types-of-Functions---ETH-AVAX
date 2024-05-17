@@ -18,79 +18,39 @@ Click on the file icon in the File Explorer tab to create a new file and name it
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-contract MyToken {
-     address public owner; // Declare owner variable
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-    string public name = "Poliana";
-    string public symbol = "PLN";
-    uint8 public decimals = 18;
-    uint256 public totalSupply;
+contract MyToken is ERC20 {
+    address public owner; // Declare owner variable
+    uint256 private _totalSupply;
 
-    mapping(address => uint256) public balanceOf;
-    mapping(address => mapping(address => uint256)) public allowance;
-
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-
-   constructor() {
+    constructor() ERC20("Poliana", "PLN") {
         owner = msg.sender; // Assign the deployer of the contract as the owner
-    }
-
-    
-    function transfer(address _to, uint256 _value) public returns (bool success) {
-        require(_to != address(20), "Invalid recipient address");
-        require(balanceOf[msg.sender] >= _value, "Insufficient balance");
-
-        balanceOf[msg.sender] -= _value;
-        balanceOf[_to] += _value;
-
-        emit Transfer(msg.sender, _to, _value);
-        return true;
-    }
-
-    function approve(address _spender, uint256 _value) public returns (bool success) {
-        allowance[msg.sender][_spender] = _value;
-        emit Approval(msg.sender, _spender, _value);
-        return true;
-    }
-
-    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
-        require(_from != address(20), "Invalid sender address");
-        require(_to != address(20), "Invalid recipient address");
-        require(balanceOf[_from] >= _value, "Insufficient balance");
-        require(_value <= allowance[_from][msg.sender], "Insufficient allowance");
-
-        balanceOf[_from] -= _value;
-        balanceOf[_to] += _value;
-        allowance[_from][msg.sender] -= _value;
-
-        emit Transfer(_from, _to, _value);
-        return true;
+        _mint(msg.sender, 1000000 * 10 ** decimals()); // Mint 1,000,000 tokens initially
+        _totalSupply = 1000000 * 10 ** decimals();
     }
 
     function mint(address _to, uint256 _amount) public returns (bool success) {
         require(msg.sender == owner, "Only the owner can mint tokens");
         
-        totalSupply += _amount;
-        balanceOf[_to] += _amount;
-
-        emit Transfer(address(20), _to, _amount);
+        _mint(_to, _amount);
+        _totalSupply += _amount;
         return true;
     }
 
     function burn(uint256 _amount) public returns (bool success) {
-        require(balanceOf[msg.sender] >= _amount, "Insufficient balance");
+        _burn(msg.sender, _amount);
+        _totalSupply -= _amount;
+        return true;
+    }
 
-        balanceOf[msg.sender] -= _amount;
-        totalSupply -= _amount;
-
-        emit Transfer(msg.sender, address(0), _amount);
+    function transfer(address _to, uint256 _value) public override returns (bool success) {
+        _transfer(msg.sender, _to, _value);
         return true;
     }
 }
-
 ```
 
 Copy and Paste: Copy the contract code you provided and paste it into the `MyToken.sol`.file in Remix.
